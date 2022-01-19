@@ -40,5 +40,4 @@ def output_ip(ip_type:str='public'):
 
 def output_watch(input_dict:dict):
     output = tf.get_output_watch(input_dict)
-    
-    return {"dict": output}
+    return output

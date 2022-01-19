@@ -26,7 +26,7 @@ class AWSTerraform(object):
             if len(stderror) > 50:   
                 create_output["success"] = False
                 create_output["message"] = message
-                create_output["code"] = 204
+                create_output["code"] = 400
 
             return create_output
         except Exception as e:
@@ -64,7 +64,7 @@ class AWSTerraform(object):
             if len(stderror) > 50:   
                 create_output["success"] = False
                 create_output["message"] = message
-                create_output["code"] = 204
+                create_output["code"] = 400
 
             return create_output
         except Exception as e:
@@ -82,12 +82,12 @@ class AWSTerraform(object):
             stdcode, stdout, stderror = self.tf.destroy(auto_approve=True, force=IsNotFlagged)
             if len(stdout) > 100:
                 create_output["success"] = True
-                create_output["message"] = 'Intialize the EC2 instance.'
+                create_output["message"] = 'Destroyed the EC2 instance.'
                 create_output["code"] = 200
             if len(stderror) > 50:   
                 create_output["success"] = False
                 create_output["message"] = 'Error'
-                create_output["code"] = 204
+                create_output["code"] = 400
 
             return create_output
         except Exception as e:
@@ -116,45 +116,39 @@ class AWSTerraform(object):
             return create_output
 
         except Exception as e:
-            create_output["success"] = True
-            create_output["message"] = output_json['instance_ips']['value']
-            create_output["code"] = 200
+            create_output["success"] = False
+            create_output["message"] = 'Error'
+            create_output["code"] = 400
             
-            return create_output
+            return create_output   
 
     def get_output_watch(self, keys:dict):
         # terraform init 
         self.tf.init()
-        create_output = {}
+        create_output = {"message":{}}
         ip_type = keys["ip_type"]
-        #mac_address = keys["mac_address"]
-        dns_name = keys["dns_name"]
         # terraform output
         try:
             output_json = self.tf.output()
-            print(output_json)
             if ip_type == 'private':
                 create_output["success"] = True
-                create_output["message"] = output_json['instance_ip_addr']['value']
-                create_output["code"] = 200
+                create_output["message"]["ip_type"] = output_json['instance_ip_addr']['value']
                 
             elif ip_type == 'public':
                 create_output["success"] = True
-                create_output["message"] = output_json['instance_ips']['value']
-                create_output["code"] = 200
+                create_output["message"]["ip_type"] = output_json['instance_ips']['value']
 
-            if "dns_name" in keys:
-                create_output["dns_name"] = output_json["addresses"]["value"]
+            if keys["dns_name"] is True:
+                create_output["message"]["dns_name"] = output_json["addresses"]["value"]
 
-            # elif mac_address == keys["mac_address"]:
+            # if keys["mac_address"]:
             #     create_output["mac"] = output_json["addresses"]["value"]
-
-            print(create_output)
+            create_output["code"] = 200
             return create_output
 
         except Exception as e:
-            create_output["success"] = True
-            create_output["message"] = output_json['instance_ips']['value']
-            create_output["code"] = 200
+            create_output["success"] = False
+            create_output["message"] = 'Error'
+            create_output["code"] = 400
             
             return create_output        
