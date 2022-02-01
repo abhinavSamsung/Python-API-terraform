@@ -2,7 +2,6 @@ venv
 test.py
 logs
 terraform
-terraCOP
 .vscode
 .idea
 run.py
