@@ -10,22 +10,15 @@ import uvicorn
 import requests
 import subprocess
 import json
+import os
+import platform
+import datetime
 
 api_version = '1.0.0'  # API version
 app = FastAPI()
 g = requestvars.g()  # global Namespace
-
-
-def after_request(headers, payload):
-    try:
-        # Logging Results from API
-        requests.request("POST", url="http://127.0.0.1:23412/logAggregator", headers=headers, data=payload)
-    except requests.exceptions.ConnectionError:
-        # If Logging API not started.
-        subprocess.Popen('python LogAggregator.py', shell=True)  # start logAggregator
-        time.sleep(1)
-        requests.request("POST", url="http://127.0.0.1:23412/logAggregator", headers=headers, data=payload)
-
+CWD = os.getcwd()
+OS_NAME = platform.system()
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
@@ -49,8 +42,36 @@ async def add_process_time_header(request: Request, call_next):
         g.req_log['apiVersion'] = api_version
         payload = json.dumps({"json_obj": g.req_log})
         headers = {'Content-Type': 'application/json'}
-        # LogAggregator
-        after_request(headers, payload)
+        try:
+            # Logging Results from API
+            requests.request("POST", url="http://127.0.0.1:23412/logAggregator", headers=headers, data=payload)
+        except requests.exceptions.ConnectionError:
+            # If Logging API not started.
+            subprocess.Popen('python LogAggregator.py', shell=True)  # start logAggregator
+            time.sleep(1)
+            requests.request("POST", url="http://127.0.0.1:23412/logAggregator", headers=headers, data=payload)
+        # Renaming the output.log
+        if OS_NAME == 'Windows':
+            filepath = f"{CWD}\logs\output.log"
+            log_directory_path = f"{CWD}\logs\\"
+        else:
+            filepath = f"{CWD}/logs/output.log"
+            log_directory_path = f"{CWD}/logs/"
+
+        if os.path.exists(filepath):
+            new_fileName = g.req_log['logFile']
+            old_file = os.path.join(f"{log_directory_path}", f"output.log")
+            new_file = os.path.join(f"{log_directory_path}", new_fileName)
+            try:
+                # open both files
+                with open(old_file,'r') as firstfile, open(new_file,'a') as secondfile:
+                    for line in firstfile:
+                        secondfile.write(line)
+                firstfile.close()
+                #os.remove(old_file)
+            except Exception as err:
+                print('Error in copying from one file to another.', err)
+
         return response
     except (IndexError, Exception) as err:
         g.req_log['errorLog'] = f"{type(err)}"
@@ -59,8 +80,14 @@ async def add_process_time_header(request: Request, call_next):
         g.req_log['apiVersion'] = api_version
         payload = json.dumps({"json_obj": g.req_log})
         headers = {'Content-Type': 'application/json'}
-        # LogAggregator
-        after_request(headers, payload)
+        try:
+            # Logging Results from API
+            requests.request("POST", url="http://127.0.0.1:23412/logAggregator", headers=headers, data=payload)
+        except requests.exceptions.ConnectionError:
+            # If Logging API not started.
+            subprocess.Popen('python LogAggregator.py', shell=True)  # start logAggregator
+            time.sleep(1)
+            requests.request("POST", url="http://127.0.0.1:23412/logAggregator", headers=headers, data=payload)
         return JSONResponse(status_code=500, content='Unable to process')
 
 
@@ -72,4 +99,4 @@ async def read_root(request: Request, response: Response):
 app.include_router(PostRouter, tags=["TerraformApp"], prefix="/terraform-app")
 
 if __name__ == '__main__':
-    uvicorn.run("app:app", reload=True, debug=False, workers=3)
+    uvicorn.run("app:app", reload=True, debug=True, workers=3)

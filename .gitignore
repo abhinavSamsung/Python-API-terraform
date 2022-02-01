@@ -1,5 +1,8 @@
 venv
 test.py
-terraCOP
-terraform
 logs
+terraform
+terraCOP
+.vscode
+.idea
+run.py
