@@ -41,3 +41,16 @@ def ResponseModel(result, message, code, operational, logFile):
         "operational": operational,
         "logFile": logFile
     }
+
+def HTMLModel(result):
+    html_content = f"""
+        <html>
+            <head>
+                <title></title>
+            </head>
+            <body>
+                {result}
+            </body>
+        </html>
+        """
+    return html_content

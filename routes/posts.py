@@ -1,9 +1,8 @@
-from urllib.request import Request
 from fastapi import APIRouter, Body, Query
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from controller.actions import create_credentials_file, create, modify_terrform, destroy_ec2, output_ip, output_watch
-from models.post import AwsKeys, ModifyKeys, CreateKeys, ResponseModel, OutputType, OutputTypeDict
+from models.post import AwsKeys, ModifyKeys, CreateKeys, ResponseModel
 from config import requestvars
 from typing import Optional, List
 import datetime
@@ -88,3 +87,4 @@ async def watcher(q: Optional[List[str]] = Query(None)):
     return JSONResponse(status_code=result["code"],
                         content=ResponseModel(result["success"], result["message"], result["code"],
                                               'Output', g.req_log['logFile']))
+

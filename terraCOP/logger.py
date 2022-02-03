@@ -17,11 +17,11 @@ class Logger(object):
         if not os.path.exists(self.log_directory_path):
             os.mkdir(self.log_directory_path)
         if not os.path.exists(self.filepath):
-            f1 = open(self.filepath, 'w+')
+            f1 = open(self.filepath, 'w')
             f1.close()
             
         self.terminal = sys.stdout
-        self.log = open(self.filepath, "w+")
+        self.log = open(self.filepath, "w")
 
     def delete_file(self):
         self.old_file = os.path.join(f"{self.log_directory_path}", f"output.log")
@@ -29,8 +29,8 @@ class Logger(object):
             os.remove(self.old_file)
 
     def write(self, message):
-        self.terminal.write(f"{message}\n")
-        self.log.write(f"{message}\n")
+        # self.terminal.write(f"{message.replace('b','')}\n")
+        self.log.write(f"{message.replace('b','')}\n")
         self.terminal.flush()
         self.log.flush()
 

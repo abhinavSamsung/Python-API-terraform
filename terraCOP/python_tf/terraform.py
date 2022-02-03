@@ -349,7 +349,7 @@ class Terraform:
             return None, None, None
 
         for line in p.stdout:
-            new_logger.write(str(line))
+            new_logger.write(str(line).replace('\n','').rstrip())
             time.sleep(0.5)
         out, err = p.communicate()
         ret_code = p.returncode
