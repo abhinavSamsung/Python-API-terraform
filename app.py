@@ -12,7 +12,6 @@ import subprocess
 import json
 import os
 import platform
-import datetime
 
 api_version = '1.0.0'  # API version
 app = FastAPI()

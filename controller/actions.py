@@ -1,5 +1,7 @@
 import os
 from terraCOP.terraCOP import AWSTerraform
+import platform
+import json
 
 default_dict = {
     "ec2_count": 1,
@@ -8,10 +10,13 @@ default_dict = {
     "ec2_instance_type": "t3.micro"
 }
 
+OS_NAME = platform.system()
 terraform_dir = 'terraform'
 pwd = os.getcwd()
-tf = AWSTerraform(f"{pwd}/{terraform_dir}")
-
+if OS_NAME == 'Windows':
+    tf = AWSTerraform(f"{pwd}/{terraform_dir}")
+else:
+    tf = AWSTerraform(f"{pwd}/{terraform_dir}")
 
 def create_credentials_file(post):
     aws_access_key_id = post['aws_access_key_id']

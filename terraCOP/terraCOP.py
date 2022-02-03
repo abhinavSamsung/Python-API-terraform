@@ -12,7 +12,7 @@ class AWSTerraform(object):
 
     def create(self, default_create: dict, show_error: bool = False):
         create_output = {}
-        global method
+        method = ''
         if 'ec2_image' and 'ec2_count' in default_create:
             method = 'Apply'
         try:
