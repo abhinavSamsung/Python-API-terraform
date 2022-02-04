@@ -4,6 +4,9 @@ import time
 class AWSTerraform(object):
 
     def __init__(self, aws_credential_file):
+        """
+        :param aws_credential_file:path of ".tf" file
+        """
         # terraform file path.
         self.filepath = aws_credential_file
         self.tf = Terraform(working_dir=self.filepath)
@@ -11,40 +14,34 @@ class AWSTerraform(object):
                              "private_ip": "instance_ip_addr", "mac_address": ""}
 
     def create(self, default_create: dict, show_error: bool = False):
+        """
+        :param default_create: dict by user (Optional)
+        :param show_error: bool
+        :return:
+        """
         create_output = {}
-        global method
-        if 'ec2_image' and 'ec2_count' in default_create:
+        method = ''
+        if 'create' in default_create.keys() and len(default_create["create"]) > 0:
             method = 'Apply'
         try:
             # terraform init
             stdcode, stdout, stderror = self.tf.init(capture_output=True)
             if method == 'Apply':
-                tf_variables = default_create
-                ec2_region = tf_variables['ec2_region'] if 'ec2_region' in tf_variables else 'us-east-1'
-                ec2_image = tf_variables['ec2_image'] if 'ec2_image' in tf_variables else 'ami-0ff8a91507f77f867'
-                ec2_instance_type = tf_variables[
-                    'ec2_instance_type'] if 'ec2_instance_type' in tf_variables else 't3.micro'
-                ec2_count = tf_variables['ec2_count'] if 'ec2_count' in tf_variables else 1
-                if ec2_count > 1:
-                    ec2_count = 1
-            
-                tf_var = {"ec2_region": ec2_region, "ec2_image": ec2_image, "ec2_instance_type": ec2_instance_type,
-                          "ec2_count": ec2_count}
-                stdcode, stdout, stderror = self.tf.apply(lock=False, skip_plan=True, var=tf_var, capture_output=True)
+                stdcode, stdout, stderror = self.tf.apply(lock=False, skip_plan=True, var=default_create, capture_output=True)
             else:
                 # terraform apply
                 stdcode, stdout, stderror = self.tf.apply(lock=False, skip_plan=True, capture_output=True)
             message = stderror if show_error is True else 'Error'
             if len(stdout) > 100:
-                create_output["success"] = True
+                create_output["success"] = "True"
                 create_output["message"] = 'Intialize the EC2 instance.'
                 create_output["code"] = 200
             if len(stderror) > 50:
-                create_output["success"] = False
+                create_output["success"] = "False"
                 create_output["message"] = message
                 create_output["code"] = 400
             else:
-                create_output["success"] = True
+                create_output["success"] = "True"
                 create_output["message"] = 'Intialize already done'
                 create_output["code"] = 200
 
