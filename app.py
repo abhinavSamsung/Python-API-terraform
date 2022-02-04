@@ -23,11 +23,12 @@ OS_NAME = platform.system()
 async def add_process_time_header(request: Request, call_next):
     # start time
     start_time = time.time()
+    # make global g which store log
     initial_g = types.SimpleNamespace()
     requestvars.request_global.set(initial_g)
     # generate unique id
     g.uid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-    g.req_log = dict([('uid', g.uid)])
+    g.req_log = dict([('uid', g.uid)]) # crate log dictonary
     g.req_log['logTimestamp'], g.req_log['host'], g.req_log["user-agent"], \
     g.req_log["accept"], g.req_log["accept-encoding"], g.req_log["connection"], g.req_log["content-length"] = \
         start_time, request.headers.get("host"), request.headers.get("user-agent"), \

@@ -25,7 +25,12 @@ def create_credentials_file(post):
     pass
 
 
-def create(default_create: dict,   show_error: bool = False):
+def create(default_create:dict, show_error:bool=False):
+    """
+    :param default_create: Optional dict
+    :param show_error: bool True or False
+   :return: dict terrCop output
+    """
     if default_create is None:
         default_create = {}
     output = tf.create(default_create=default_create, show_error=show_error)
