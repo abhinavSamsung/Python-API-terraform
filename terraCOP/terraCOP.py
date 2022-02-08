@@ -46,10 +46,9 @@ class AWSTerraform(object):
                 create_output["message"] = message
                 create_output["code"] = 400
 
-
             return create_output
         except Exception as e:
-            create_output["success"] = 'Some Error Occured.'
+            create_output["success"] = 'False'
             create_output["message"] = e
             create_output["code"] = 400
             return create_output
