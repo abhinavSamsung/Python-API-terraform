@@ -12,6 +12,8 @@ import time
 g = requestvars.g()
 router = APIRouter()
 date_time_format = '%Y%m%dT%H%M%SZ'
+date_time_log_file = f"output-{datetime.datetime.utcfromtimestamp(time.time()).strftime(date_time_format)}.log"
+
 
 @router.post("/user_creation/", response_description="User Access key and secret Initializing.")
 async def user_initialize(post: AwsKeys = Body(...)):
@@ -37,32 +39,36 @@ async def intialize_terraform(post: CreateKeys = Body(...)):
             g.req_log[keys] = item
         result = create(default_create=create_dict, show_error=post.show_error)
     g.req_log["API"] = 'Create'
-    g.req_log['logFile'] = f"output-{datetime.datetime.utcfromtimestamp(time.time()).strftime(date_time_format)}.log"
+    g.req_log['logFile'] = date_time_log_file
     g.req_log["success"], g.req_log["message"], g.req_log["code"] = result["success"], str(result["message"]), result["code"]
     return JSONResponse(status_code=result["code"],
                         content=ResponseModel(str(result["success"]), str(result["message"]), result["code"], 
-                                              'Initializing', g.req_log['logFile']))
+                                              'Initialize', g.req_log['logFile']))
 
 
 @router.post("/apply", response_description="Terraform apply and create 1 ec2 instances.")
 async def modify(ec2_keys: ModifyKeys = Body(...)):
+    """
+    :param ec2_keys: dict by user that contains the variables to modify in the terraform file.
+    :return: JSON response
+    """
     ec2_keys = jsonable_encoder(ec2_keys)
     for keys, item in ec2_keys.items():
         g.req_log[keys] = item
-    g.req_log["API"] = 'Apply'
     result = modify_terrform(ec2_keys)
-    g.req_log['logFile'] = f"output-{datetime.datetime.utcfromtimestamp(time.time()).strftime(date_time_format)}.log"
+    g.req_log["API"] = 'Apply'
+    g.req_log['logFile'] = date_time_log_file
     g.req_log["success"], g.req_log["message"], g.req_log["code"] = result["success"], result["message"], result["code"]
     return JSONResponse(status_code=result["code"],
-                        content=ResponseModel(result["success"], result["message"], result["code"],
+                        content=ResponseModel(str(result["success"]), str(result["message"]), result["code"],
                                               'Apply', g.req_log['logFile']))
 
 
 @router.post("/destroy", response_description="destroy all ec2 instances.")
 async def destroy_terraform():
-    g.req_log["API"] = 'Destroy'
     result = destroy_ec2()
-    g.req_log['logFile'] = f"output-{datetime.datetime.utcfromtimestamp(time.time()).strftime(date_time_format)}.log"
+    g.req_log["API"] = 'Destroy'
+    g.req_log['logFile'] = date_time_log_file
     g.req_log["success"], g.req_log["message"], g.req_log["code"] = result["success"], result["message"], result["code"]
     return JSONResponse(status_code=result["code"],
                         content=ResponseModel(result["success"], result["message"], result["code"],
@@ -71,6 +77,10 @@ async def destroy_terraform():
 
 @router.get("/output/{ip_type}", response_description="Give the IP Address of ec2 instances")
 async def output_ip_address(ip_type: Optional[str]):
+    """
+    :param ip_type: by user[optional] private or public[default]
+    :return: JSON Response
+    """
     if ip_type == 'public' or ip_type == 'private':
         ip_type = ip_type
         g.req_log['ip_type'] = ip_type
@@ -78,7 +88,7 @@ async def output_ip_address(ip_type: Optional[str]):
         ip_type = 'public'
     g.req_log["API"] = 'Output'
     result = output_ip(ip_type=ip_type)
-    g.req_log['logFile'] = f"output-{datetime.datetime.utcfromtimestamp(time.time()).strftime(date_time_format)}.log"
+    g.req_log['logFile'] = date_time_log_file
     g.req_log["success"], g.req_log["message"], g.req_log["code"] = result["success"], result["message"], result["code"]
     return JSONResponse(status_code=result["code"],
                         content=ResponseModel(result["success"], result["message"], result["code"],
@@ -86,12 +96,16 @@ async def output_ip_address(ip_type: Optional[str]):
 
 @router.get("/watcher", response_description="Give Output according to the user input dictionary.")
 async def watcher(q: Optional[List[str]] = Query(None)):
+    """
+    :param q: By User according to the output user wants to get from terraform file.
+    :return: JSON Response
+    """
     if len(q) == 0:
         return JSONResponse(status_code=400, content="No Parameter.")
     g.req_log['watch_list'] = q
     g.req_log["API"] = 'Watcher'
     result = output_watch(input_list=q)
-    g.req_log['logFile'] = f"output-{datetime.datetime.utcfromtimestamp(time.time()).strftime(date_time_format)}.log"
+    g.req_log['logFile'] = date_time_log_file
     g.req_log["success"], g.req_log["message"], g.req_log["code"] = result["success"], result["message"], result["code"]
     return JSONResponse(status_code=result["code"],
                         content=ResponseModel(result["success"], result["message"], result["code"],

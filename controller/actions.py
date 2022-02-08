@@ -1,14 +1,6 @@
 import os
 from terraCOP.terraCOP import AWSTerraform
 import platform
-import json
-
-default_dict = {
-    "ec2_count": 1,
-    "ec2_image": "ami-0ff8a91507f77f867",
-    "show_error": False,
-    "ec2_instance_type": "t3.micro"
-}
 
 OS_NAME = platform.system()
 terraform_dir = 'terraform'
@@ -29,7 +21,7 @@ def create(default_create:dict, show_error:bool=False):
     """
     :param default_create: Optional dict
     :param show_error: bool True or False
-   :return: dict terrCop output
+   :return: dict from terrCop
     """
     if default_create is None:
         default_create = {}
@@ -37,7 +29,12 @@ def create(default_create:dict, show_error:bool=False):
     return output
 
 
-def modify_terrform(ec2_keys: dict = default_dict, show_error: bool = False):
+def modify_terrform(ec2_keys: dict):
+    """
+    :param ec2_keys: dict by user that contains the variables to modify in the terraform file.
+    :param show_error: bool
+    :return: dict from terraCOP
+    """
     if 'show_error' in ec2_keys:
         show_error = ec2_keys["show_error"]
         del ec2_keys["show_error"]
@@ -48,15 +45,26 @@ def modify_terrform(ec2_keys: dict = default_dict, show_error: bool = False):
 
 
 def destroy_ec2():
+    """
+    :return: dict from terraCOP
+    """
     output = tf.destroy()
     return output
 
 
 def output_ip(ip_type: str = 'public'):
+    """
+    :param ip_type: by user[optional] private or public[default]
+    :return: dict from terraCOP
+    """
     output = tf.get_output(ip_type=ip_type)
     return output
 
 
 def output_watch(input_list: list):
+    """
+    :param input_list: By User according to the output user wants to get from terraform file.
+    :return: dict from terraCOP
+    """
     output = tf.get_output_watch(input_list)
     return output

@@ -17,7 +17,7 @@ class AWSTerraform(object):
         """
         :param default_create: dict by user (Optional)
         :param show_error: bool
-        :return:
+        :return: dict with keys:- code, message, success.
         """
         create_output = {}
         method = ''
@@ -36,14 +36,16 @@ class AWSTerraform(object):
                 create_output["success"] = "True"
                 create_output["message"] = 'Intialize the EC2 instance.'
                 create_output["code"] = 200
-            if len(stderror) > 50:
-                create_output["success"] = "False"
-                create_output["message"] = message
-                create_output["code"] = 400
             else:
                 create_output["success"] = "True"
                 create_output["message"] = 'Intialize already done'
                 create_output["code"] = 200
+
+            if len(stderror) > 50:
+                create_output["success"] = "False"
+                create_output["message"] = message
+                create_output["code"] = 400
+
 
             return create_output
         except Exception as e:
@@ -53,36 +55,32 @@ class AWSTerraform(object):
             return create_output
 
     def modify(self, tf_variables: dict, show_error: bool = False):
+        """
+        :param tf_variables: dict by user that contains the variables to apply in the terraform file.
+        :param show_error: bool
+        :return: dict with keys:- code, message, success.
+        """
         create_output = {}
         try:
-            ec2_region = tf_variables['ec2_region'] if 'ec2_region' in tf_variables else 'us-east-1'
-            ec2_image = tf_variables['ec2_image'] if 'ec2_image' in tf_variables else 'ami-0ff8a91507f77f867'
-            ec2_instance_type = tf_variables['ec2_instance_type'] if 'ec2_instance_type' in tf_variables else 't3.micro'
-            ec2_count = tf_variables['ec2_count'] if 'ec2_count' in tf_variables else 1
-            if ec2_count > 1:
-                ec2_count = 1
-
-            tf_var = {"ec2_region": ec2_region, "ec2_image": ec2_image, "ec2_instance_type": ec2_instance_type,
-                      "ec2_count": ec2_count}
-
             # terraform init
             stdcode, stdout, stderror = self.tf.init(capture_output=True)
-
             # terraform apply
-            stdcode, stdout, stderror = self.tf.apply(lock=False, skip_plan=True, var=tf_var, capture_output=True)
+            stdcode, stdout, stderror = self.tf.apply(lock=False, skip_plan=True, var=tf_variables, capture_output=True)
             message = stderror if show_error is True else 'Error'
             if len(stdout) > 100:
-                create_output["success"] = True
+                create_output["success"] = "True"
                 create_output["message"] = 'Applied the requirements.'
                 create_output["code"] = 200
-            if len(stderror) > 50:
-                create_output["success"] = False
-                create_output["message"] = message
-                create_output["code"] = 400
             else:
-                create_output["success"] = True
+                create_output["success"] = "True"
                 create_output["message"] = 'Intialize already done'
                 create_output["code"] = 200
+
+            if len(stderror) > 50:
+                create_output["success"] = "False"
+                create_output["message"] = message
+                create_output["code"] = 400
+
             return create_output
         except Exception as e:
             create_output["success"] = 'Some Error Occured.'
@@ -91,6 +89,9 @@ class AWSTerraform(object):
             return create_output
 
     def destroy(self):
+        """
+        :return: dict with keys:- code, message, success.
+        """
         create_output = {}
         # terraform init
         self.tf.init()
@@ -98,17 +99,18 @@ class AWSTerraform(object):
         try:
             stdcode, stdout, stderror = self.tf.destroy(auto_approve=True, force=IsNotFlagged)
             if len(stdout) > 100:
-                create_output["success"] = True
+                create_output["success"] = "True"
                 create_output["message"] = "Destroyed the EC2 instance."
                 create_output["code"] = 200
-            if len(stderror) > 50:
-                create_output["success"] = False
-                create_output["message"] = 'Error'
-                create_output["code"] = 400
             else:
-                create_output["success"] = True
+                create_output["success"] = "True"
                 create_output["message"] = 'There are no instances.'
                 create_output["code"] = 200
+
+            if len(stderror) > 50:
+                create_output["success"] = "False"
+                create_output["message"] = 'Error'
+                create_output["code"] = 400
 
 
             return create_output
@@ -119,6 +121,10 @@ class AWSTerraform(object):
             return create_output
 
     def get_output(self, ip_type='public'):
+        """
+        :param ip_type: by user[optional] private or public[default]
+        :return: dict with keys:- code, message:{}, success.
+        """
         # terraform init 
         self.tf.init()
         create_output = {"message":{}}
@@ -128,12 +134,12 @@ class AWSTerraform(object):
             if ip_type == 'private':
                 create_output["success"] = True
                 create_output["message"]["private"] = output_json['instance_ip_addr']['value']
-                create_output["code"] = 200
 
             elif ip_type == 'public':
                 create_output["success"] = True
                 create_output["message"]["public"] = output_json['instance_ips']['value']
-                create_output["code"] = 200
+
+            create_output["code"] = 200
             return create_output
 
         except Exception as e:
@@ -144,6 +150,10 @@ class AWSTerraform(object):
             return create_output
 
     def get_output_watch(self, output_list: list):
+        """
+        :param output_list: By User according to the output user wants to get from terraform file.
+        :return: dict with keys:- code, message:{}, success.
+        """
         # terraform init 
         self.tf.init()
         create_output = {"message": {}}
