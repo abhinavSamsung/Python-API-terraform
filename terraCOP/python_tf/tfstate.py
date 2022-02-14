@@ -1,25 +1,26 @@
+# -*- coding: utf-8 -*-
+# above is for compatibility of python2.7.11
+
 import json
-import logging
 import os
-from typing import Dict, Optional
+import logging
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
-class Tfstate:
-    def __init__(self, data: Optional[Dict[str, str]] = None):
-        self.tfstate_file: Optional[str] = None
+class Tfstate(object):
+    def __init__(self, data=None):
+        self.tfstate_file = None
         self.native_data = data
         if data:
             self.__dict__ = data
 
     @staticmethod
-    def load_file(file_path: str) -> "Tfstate":
-        """Read the tfstate file and load its contents.
-
-        Parses then as JSON and put the result into the object.
+    def load_file(file_path):
         """
-        logger.debug("read data from %s", file_path)
+        Read the tfstate file and load its contents, parses then as JSON and put the result into the object
+        """
+        log.debug('read data from {0}'.format(file_path))
         if os.path.exists(file_path):
             with open(file_path) as f:
                 json_data = json.load(f)
@@ -28,6 +29,6 @@ class Tfstate:
             tf_state.tfstate_file = file_path
             return tf_state
 
-        logger.debug("%s does not exist", file_path)
+        log.debug('{0} is not exist'.format(file_path))
 
         return Tfstate()

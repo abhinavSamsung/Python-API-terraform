@@ -1,7 +1,6 @@
 from typing import Optional, List
 from pydantic import BaseModel
-import time
-
+import datetime
 
 class AwsKeys(BaseModel):
     aws_access_key_id: Optional[str]
@@ -15,12 +14,8 @@ class CreateKeys(BaseModel):
 
 
 class ModifyKeys(BaseModel):
-    ec2_region: Optional[str]
-    ec2_image: str
-    ec2_instance_type: str
-    ec2_count: Optional[int]
     show_error: Optional[bool]
-
+    modify: dict
 
 class OutputType(BaseModel):
     publicIP: Optional[str]
@@ -42,15 +37,8 @@ def ResponseModel(result, message, code, operational, logFile):
         "logFile": logFile
     }
 
-def HTMLModel(result):
-    html_content = f"""
-        <html>
-            <head>
-                <title></title>
-            </head>
-            <body>
-                {result}
-            </body>
-        </html>
-        """
-    return html_content
+
+def DateTimeLogfileName(current_time):
+    date_time_format = '%Y%m%dT%H%M%SZ'
+    date_time_log_file = f"output-{datetime.datetime.utcfromtimestamp(current_time).strftime(date_time_format)}.log"
+    return date_time_log_file

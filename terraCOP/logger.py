@@ -28,8 +28,8 @@ class Logger(object):
             os.remove(self.old_file)
 
     def write(self, message):
-        # self.terminal.write(f"{message.replace('b','')}\n")
-        self.log.write(f"{message.replace('b','')}\n")
+        #self.terminal.write(f"{message[1:]}\n")
+        self.log.write(f"{message[1:]}\n")
         self.terminal.flush()
         self.log.flush()
 

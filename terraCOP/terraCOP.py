@@ -1,4 +1,4 @@
-from terraCOP.python_tf.terraform import Terraform, IsNotFlagged
+from terraCOP.python_tf import Terraform, IsNotFlagged
 import time
 
 class AWSTerraform(object):
@@ -11,7 +11,8 @@ class AWSTerraform(object):
         self.filepath = aws_credential_file
         self.tf = Terraform(working_dir=self.filepath)
         self.watcher_dict = {"dns_name":"addresses", "public_ip": "instance_ips",
-                             "private_ip": "instance_ip_addr", "mac_address": ""}
+                             "private_ip": "instance_ip_addr", "mac_address": "",
+                             "address":"address"}
 
     def create(self, default_create: dict, show_error: bool = False):
         """
@@ -32,13 +33,9 @@ class AWSTerraform(object):
                 # terraform apply
                 stdcode, stdout, stderror = self.tf.apply(lock=False, skip_plan=True, capture_output=True)
             message = stderror if show_error is True else 'Error'
-            if len(stdout) > 100:
+            if len(stdout) > 1:
                 create_output["success"] = "True"
-                create_output["message"] = 'Intialize the EC2 instance.'
-                create_output["code"] = 200
-            else:
-                create_output["success"] = "True"
-                create_output["message"] = 'Intialize already done'
+                create_output["message"] = str(stdout).replace("'",'')
                 create_output["code"] = 200
 
             if len(stderror) > 50:
@@ -64,15 +61,16 @@ class AWSTerraform(object):
             # terraform init
             stdcode, stdout, stderror = self.tf.init(capture_output=True)
             # terraform apply
-            stdcode, stdout, stderror = self.tf.apply(lock=False, skip_plan=True, var=tf_variables, capture_output=True)
-            message = stderror if show_error is True else 'Error'
-            if len(stdout) > 100:
-                create_output["success"] = "True"
-                create_output["message"] = 'Applied the requirements.'
-                create_output["code"] = 200
+
+            if not tf_variables:
+                stdcode, stdout, stderror = self.tf.apply(lock=False, skip_plan=True,
+                                                          capture_output=True)
             else:
+                stdcode, stdout, stderror = self.tf.apply(lock=False, skip_plan=True, var=tf_variables, capture_output=True)
+            message = stderror if show_error is True else 'Error'
+            if len(stdout) > 1:
                 create_output["success"] = "True"
-                create_output["message"] = 'Intialize already done'
+                create_output["message"] = str(stdout).replace("'",'')
                 create_output["code"] = 200
 
             if len(stderror) > 50:
@@ -97,20 +95,15 @@ class AWSTerraform(object):
         # terraform destroy
         try:
             stdcode, stdout, stderror = self.tf.destroy(auto_approve=True, force=IsNotFlagged)
-            if len(stdout) > 100:
+            if len(stdout) > 1:
                 create_output["success"] = "True"
-                create_output["message"] = "Destroyed the EC2 instance."
-                create_output["code"] = 200
-            else:
-                create_output["success"] = "True"
-                create_output["message"] = 'There are no instances.'
+                create_output["message"] = str(stdout).replace("'",'')
                 create_output["code"] = 200
 
             if len(stderror) > 50:
                 create_output["success"] = "False"
                 create_output["message"] = 'Error'
                 create_output["code"] = 400
-
 
             return create_output
         except Exception as e:
@@ -130,13 +123,17 @@ class AWSTerraform(object):
         # terraform output
         try:
             output_json = self.tf.output()
+            create_output["success"] = True
+
             if ip_type == 'private':
-                create_output["success"] = True
                 create_output["message"]["private"] = output_json['instance_ip_addr']['value']
 
             elif ip_type == 'public':
-                create_output["success"] = True
                 create_output["message"]["public"] = output_json['instance_ips']['value']
+
+            if not output_json:
+                create_output["message"] = 'No Output'
+                create_output["code"] = 200
 
             create_output["code"] = 200
             return create_output
@@ -162,20 +159,28 @@ class AWSTerraform(object):
         # terraform output
         try:
             output_json = self.tf.output()
+            print("output", output_json)
             time.sleep(1)
+            create_output["success"] = True
             if 'public_ip' in keys:
-                create_output["success"] = True
                 create_output["message"]["public"] = output_json[keys['public_ip']]['value']
 
             if 'private_ip' in keys:
-                create_output["success"] = True
                 create_output["message"]["private"] = output_json[keys['private_ip']]['value']
 
             if "dns_name" in keys:
                 create_output["message"]["dns_name"] = output_json[keys["dns_name"]]["value"]
 
+            if "address" in keys:
+                create_output["message"]["address"] = output_json[keys["address"]["value"]]
+
             # if keys["mac_address"]:
             #     create_output["mac"] = output_json["addresses"]["value"]
+
+            if not output_json:
+                create_output["message"] = 'No Output'
+                create_output["code"] = 200
+
             create_output["code"] = 200
             return create_output
 

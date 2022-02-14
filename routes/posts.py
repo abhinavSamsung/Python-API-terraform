@@ -2,18 +2,14 @@ from fastapi import APIRouter, Body, Query
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from controller.actions import create_credentials_file, create, modify_terrform, destroy_ec2, output_ip, output_watch
-from models.post import AwsKeys, ModifyKeys, CreateKeys, ResponseModel
+from models.post import AwsKeys, ModifyKeys, CreateKeys, ResponseModel, DateTimeLogfileName
 from config import requestvars
 from typing import Optional, List
-import datetime
 import time
 
 # g is the global
 g = requestvars.g()
 router = APIRouter()
-date_time_format = '%Y%m%dT%H%M%SZ'
-date_time_log_file = f"output-{datetime.datetime.utcfromtimestamp(time.time()).strftime(date_time_format)}.log"
-
 
 @router.post("/user_creation/", response_description="User Access key and secret Initializing.")
 async def user_initialize(post: AwsKeys = Body(...)):
@@ -33,13 +29,13 @@ async def intialize_terraform(post: CreateKeys = Body(...)):
     if request_dict['create'] is None:
         request_dict.pop('create', None)
     if 'create' in request_dict.keys() and len(request_dict["create"]) == 0:
-        result = {"message": "Key 'Create' is empty.", "code":200, "success": False}
+        result = {"message": "Key 'Create' is empty. If don't have any variables then remove the 'create' key.", "code":200, "success": False}
     else:
         for keys, item in request_dict.items():
             g.req_log[keys] = item
         result = create(default_create=create_dict, show_error=post.show_error)
     g.req_log["API"] = 'Create'
-    g.req_log['logFile'] = date_time_log_file
+    g.req_log['logFile'] = DateTimeLogfileName(time.time())
     g.req_log["success"], g.req_log["message"], g.req_log["code"] = result["success"], str(result["message"]), result["code"]
     return JSONResponse(status_code=result["code"],
                         content=ResponseModel(str(result["success"]), str(result["message"]), result["code"], 
@@ -53,11 +49,19 @@ async def modify(ec2_keys: ModifyKeys = Body(...)):
     :return: JSON response
     """
     ec2_keys = jsonable_encoder(ec2_keys)
+    if ec2_keys['modify'] is None:
+        ec2_keys.pop('modify', None)
+    if 'create' in ec2_keys.keys() and len(ec2_keys["modify"]) == 0:
+        ec2_keys.pop('modify', None)
+    else:
+        for keys, value in ec2_keys['modify'].items():
+            ec2_keys[keys] = value
+        ec2_keys.pop('modify', None)
     for keys, item in ec2_keys.items():
         g.req_log[keys] = item
     result = modify_terrform(ec2_keys)
     g.req_log["API"] = 'Apply'
-    g.req_log['logFile'] = date_time_log_file
+    g.req_log['logFile'] = DateTimeLogfileName(time.time())
     g.req_log["success"], g.req_log["message"], g.req_log["code"] = result["success"], result["message"], result["code"]
     return JSONResponse(status_code=result["code"],
                         content=ResponseModel(str(result["success"]), str(result["message"]), result["code"],
@@ -68,7 +72,7 @@ async def modify(ec2_keys: ModifyKeys = Body(...)):
 async def destroy_terraform():
     result = destroy_ec2()
     g.req_log["API"] = 'Destroy'
-    g.req_log['logFile'] = date_time_log_file
+    g.req_log['logFile'] = DateTimeLogfileName(time.time())
     g.req_log["success"], g.req_log["message"], g.req_log["code"] = result["success"], result["message"], result["code"]
     return JSONResponse(status_code=result["code"],
                         content=ResponseModel(result["success"], result["message"], result["code"],
@@ -88,7 +92,7 @@ async def output_ip_address(ip_type: Optional[str]):
         ip_type = 'public'
     g.req_log["API"] = 'Output'
     result = output_ip(ip_type=ip_type)
-    g.req_log['logFile'] = date_time_log_file
+    g.req_log['logFile'] = DateTimeLogfileName(time.time())
     g.req_log["success"], g.req_log["message"], g.req_log["code"] = result["success"], result["message"], result["code"]
     return JSONResponse(status_code=result["code"],
                         content=ResponseModel(result["success"], result["message"], result["code"],
@@ -105,7 +109,7 @@ async def watcher(q: Optional[List[str]] = Query(None)):
     g.req_log['watch_list'] = q
     g.req_log["API"] = 'Watcher'
     result = output_watch(input_list=q)
-    g.req_log['logFile'] = date_time_log_file
+    g.req_log['logFile'] = DateTimeLogfileName(time.time())
     g.req_log["success"], g.req_log["message"], g.req_log["code"] = result["success"], result["message"], result["code"]
     return JSONResponse(status_code=result["code"],
                         content=ResponseModel(result["success"], result["message"], result["code"],
