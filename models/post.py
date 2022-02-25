@@ -1,6 +1,7 @@
 from typing import Optional, List
 from pydantic import BaseModel
 import datetime
+import requests
 
 class AwsKeys(BaseModel):
     aws_access_key_id: Optional[str]
@@ -11,11 +12,19 @@ class AwsKeys(BaseModel):
 class CreateKeys(BaseModel):
     show_error: Optional[bool]
     create: Optional[dict]
+    userId: str
+    clusterId: str
 
 
 class ModifyKeys(BaseModel):
     show_error: Optional[bool]
     modify: dict
+    userId: str
+    clusterId: str
+
+class DestroyUsers(BaseModel):
+    userId : str
+    clusterId: str
 
 class OutputType(BaseModel):
     publicIP: Optional[str]
@@ -36,6 +45,18 @@ def ResponseModel(result, message, code, operational, logFile):
         "operational": operational,
         "logFile": logFile
     }
+
+def clusterFilePath(userId:str, clusterId):
+    try:
+        headers = {'Content-Type': 'application/json'}
+        payload = {}
+        result = requests.request("GET", url=f"http://127.0.0.1:8000/user/{userId}/cluster?clusterId={clusterId}",
+                                  headers=headers, data=payload).json()
+        if len(result['message']) == 0:
+            return 'cluster not exist.', 400
+        return result["message"][0]['filePath'], 200
+    except Exception as err:
+        return 'cluster not exist.', 400
 
 
 def DateTimeLogfileName(current_time):

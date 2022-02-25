@@ -21,6 +21,8 @@ OS_NAME = platform.system()
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
+    # g is the global
+    g = requestvars.g()
     # start time
     start_time = time.time()
     # make global g which store log
@@ -34,6 +36,7 @@ async def add_process_time_header(request: Request, call_next):
         start_time, request.headers.get("host"), request.headers.get("user-agent"), \
         request.headers.get("accept"), request.headers.get("accept-encoding"), \
         request.headers.get("connection"), request.headers.get("content-length")
+
     try:
         response = await call_next(request)  # Get the Response
         process_time = time.time() - start_time
@@ -99,4 +102,4 @@ async def read_root(request: Request, response: Response):
 app.include_router(PostRouter, tags=["TerraformApp"], prefix="/terraform-app")
 
 if __name__ == '__main__':
-    uvicorn.run("app:app", reload=True, debug=True, workers=3)
+    uvicorn.run("app:app", reload=True, debug=True, workers=3, port=8080)
