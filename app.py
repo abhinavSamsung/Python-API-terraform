@@ -21,6 +21,11 @@ OS_NAME = platform.system()
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
+    """
+    :param request: request by user
+    :param call_next:
+    :return JSON Response 
+    """
     # g is the global
     g = requestvars.g()
     # start time
@@ -98,7 +103,7 @@ async def add_process_time_header(request: Request, call_next):
 
 @app.get('/', tags=["Root"])
 async def read_root(request: Request, response: Response):
-    return {"message": "Welcome to the"}
+    return {"message": "Welcome to the terraform API"}
 
 
 app.include_router(PostRouter, tags=["TerraformApp"], prefix="/terraform-app")
