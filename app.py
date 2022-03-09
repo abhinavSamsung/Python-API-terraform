@@ -62,6 +62,8 @@ async def add_process_time_header(request: Request, call_next):
             log_directory_path = f"{CWD}/logs/"
 
         if os.path.exists(filepath):
+            if 'logFile' not in g.req_log:
+                g.req_log['logFile'] = 'output.log'
             new_fileName = g.req_log['logFile']
             old_file = os.path.join(f"{log_directory_path}", f"output.log")
             new_file = os.path.join(f"{log_directory_path}", new_fileName)

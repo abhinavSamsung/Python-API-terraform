@@ -1,7 +1,8 @@
-from typing import Optional, List
+from typing import Optional
 from pydantic import BaseModel
 import datetime
 import requests
+import os, platform
 
 class AwsKeys(BaseModel):
     aws_access_key_id: Optional[str]
@@ -52,9 +53,14 @@ def clusterFilePath(userId:str, clusterId):
         payload = {}
         result = requests.request("GET", url=f"http://127.0.0.1:8000/user/{userId}/cluster?clusterId={clusterId}",
                                   headers=headers, data=payload).json()
+        filepath = result["message"][0]['filePath']
         if len(result['message']) == 0:
             return 'cluster not exist.', 400
-        return result["message"][0]['filePath'], 200
+        if os.path.exists(filepath):
+            return result["message"][0]['filePath'], 200
+        else:
+            return f"Filepath of given user {userId} does not exist.", 400
+
     except Exception as err:
         return 'cluster not exist.', 400
 

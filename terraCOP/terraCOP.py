@@ -41,7 +41,7 @@ class AWSTerraform(object):
             if len(stderror) > 50:
                 create_output["success"] = "False"
                 create_output["message"] = message
-                create_output["code"] = 400
+                create_output["code"] = 200
 
             return create_output
         except Exception as e:
@@ -76,7 +76,7 @@ class AWSTerraform(object):
             if len(stderror) > 50:
                 create_output["success"] = "False"
                 create_output["message"] = message
-                create_output["code"] = 400
+                create_output["code"] = 200
 
             return create_output
         except Exception as e:
@@ -103,7 +103,7 @@ class AWSTerraform(object):
             if len(stderror) > 50:
                 create_output["success"] = "False"
                 create_output["message"] = 'Error'
-                create_output["code"] = 400
+                create_output["code"] = 200
 
             return create_output
         except Exception as e:
