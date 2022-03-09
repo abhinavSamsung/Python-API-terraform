@@ -39,6 +39,14 @@ class OutputTypeDict(BaseModel):
 
 
 def ResponseModel(result, message, code, operational, logFile):
+    """
+    :param result: result by terraform API.
+    :param message: message of API
+    :param code: API Response code
+    :param operational: Type of API
+    :param logFile: output log file
+    :return: JSON Response
+    """
     return {
         "Success": result,
         "message": message,
